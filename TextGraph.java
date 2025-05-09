@@ -110,43 +110,21 @@ public class TextGraph {
 
     // 生成新文本
     public String generateNewText(String inputText) {
-        if (inputText == null || inputText.trim().isEmpty()) {
-            return "输入文本不能为空！";
-        }
-
-        // 将文本转换为小写并分割成单词，保留标点符号
         String[] words = inputText.toLowerCase().split("\\s+");
         List<String> result = new ArrayList<>();
         
         for (int i = 0; i < words.length; i++) {
-            // 处理当前单词
-            String currentWord = words[i].replaceAll("[^a-zA-Z]", "");
-            if (!currentWord.isEmpty()) {
-                result.add(words[i]); // 保留原始单词（包括标点符号）
-                
-                // 如果不是最后一个单词，尝试添加桥接词
-                if (i < words.length - 1) {
-                    String nextWord = words[i + 1].replaceAll("[^a-zA-Z]", "");
-                    if (!nextWord.isEmpty()) {
-                        String bridgeWords = queryBridgeWords(currentWord, nextWord);
-                        
-                        // 如果存在桥接词，随机选择一个
-                        if (bridgeWords.startsWith("The bridge word")) {
-                            String bridgeWord = bridgeWords.substring(bridgeWords.lastIndexOf(": ") + 2);
-                            result.add(bridgeWord);
-                        } else if (bridgeWords.startsWith("The bridge words")) {
-                            String[] bridges = bridgeWords.substring(bridgeWords.lastIndexOf(": ") + 2).split(", ");
-                            String lastBridge = bridges[bridges.length - 1].replace(" and ", "");
-                            // 随机选择一个桥接词
-                            Random random = new Random();
-                            String selectedBridge = bridges[random.nextInt(bridges.length)];
-                            result.add(selectedBridge);
-                        }
-                    }
+            result.add(words[i]);
+            if (i < words.length - 1) {
+                String bridgeWords = queryBridgeWords(words[i], words[i + 1]);
+                if (bridgeWords.startsWith("The bridge word")) {
+                    String bridgeWord = bridgeWords.substring(bridgeWords.lastIndexOf(": ") + 2);
+                    result.add(bridgeWord);
+                } else if (bridgeWords.startsWith("The bridge words")) {
+                    String[] bridges = bridgeWords.substring(bridgeWords.lastIndexOf(": ") + 2).split(", ");
+                    String lastBridge = bridges[bridges.length - 1].replace(" and ", "");
+                    result.add(lastBridge);
                 }
-            } else {
-                // 如果当前单词只包含标点符号，直接添加
-                result.add(words[i]);
             }
         }
         
