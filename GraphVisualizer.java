@@ -142,6 +142,7 @@ public class GraphVisualizer extends JFrame {
         }
 
         // 绘制节点
+        // git test B2
         for (String node : graph.getNodes()) {
             Point2D.Double pos = nodePositions.get(node);
             
