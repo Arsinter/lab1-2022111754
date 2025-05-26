@@ -1,3 +1,4 @@
+package com;
 import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -132,6 +133,7 @@ public class TextGraph {
     }
 
     // 计算最短路径
+    // git test B2
     public String calcShortestPath(String word1, String word2) {
         word1 = word1.toLowerCase();
         word2 = word2.toLowerCase();
