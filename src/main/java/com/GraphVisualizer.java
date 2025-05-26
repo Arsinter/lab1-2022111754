@@ -1,3 +1,4 @@
+package com;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -20,6 +21,7 @@ public class GraphVisualizer extends JFrame {
         
         setTitle("有向图可视化");
         setSize(WIDTH, HEIGHT);
+
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         
         // 计算节点位置
