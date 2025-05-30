@@ -38,10 +38,11 @@ public class TextGraph {
   public void buildGraphFromFile(String filename) throws IOException {
     try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
       String line;
-      String previousWord = null;
+      
       while ((line = reader.readLine()) != null) {
         // 将文本转换为小写并分割成单词
         String[] words = line.toLowerCase().split("[^a-zA-Z]+");
+        String previousWord = null;
         for (String word : words) {
           if (!word.isEmpty()) {
             if (previousWord != null) {
@@ -114,6 +115,11 @@ public class TextGraph {
 
     if (!graph.containsNode(word1) || !graph.containsNode(word2)) {
       return "No " + word1 + " or " + word2 + " in the graph!";
+    }
+
+    // 处理自环的情况
+    if (word1.equals(word2)) {
+      return "No bridge words from " + word1 + " to " + word1 + "!";
     }
 
     List<String> bridgeWords = new ArrayList<>();
