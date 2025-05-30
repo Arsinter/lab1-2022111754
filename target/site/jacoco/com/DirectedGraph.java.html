@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DirectedGraph.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TextGraphVisualizer</a> &gt; <a href="index.source.html" class="el_package">com</a> &gt; <span class="el_source">DirectedGraph.java</span></div><h1>DirectedGraph.java</h1><pre class="source lang-java linenums">package com;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * 有向图类.
+ */
+public class DirectedGraph {
+  private Map&lt;String, Map&lt;String, Integer&gt;&gt; graph; // 存储图的邻接表
+  private Map&lt;String, Double&gt; pageRank; // 存储PageRank值
+
+  /**
+   * 有向图类.
+   */
+<span class="fc" id="L17">  public DirectedGraph() {</span>
+<span class="fc" id="L18">    graph = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L19">    pageRank = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L20">  }</span>
+
+  /**
+   * 复制构造函数（深拷贝）.
+   * @param other 要复制的图对象
+   */
+  public DirectedGraph(DirectedGraph other) {
+<span class="nc" id="L27">    this(); // 调用默认构造函数初始化</span>
+
+    // 深拷贝邻接表
+<span class="nc bnc" id="L30" title="All 2 branches missed.">    if (other.graph != null) {</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">      for (Map.Entry&lt;String, Map&lt;String, Integer&gt;&gt; entry : other.graph.entrySet()) {</span>
+<span class="nc" id="L32">        Map&lt;String, Integer&gt; edges = new HashMap&lt;&gt;(entry.getValue());</span>
+<span class="nc" id="L33">        this.graph.put(entry.getKey(), edges);</span>
+      }
+    }
+
+    // 深拷贝PageRank
+<span class="nc bnc" id="L38" title="All 2 branches missed.">    if (other.pageRank != null) {</span>
+<span class="nc" id="L39">      this.pageRank = new HashMap&lt;&gt;(other.pageRank);</span>
+    }
+<span class="nc" id="L41">  }</span>
+
+  /**
+   * 添加边.
+   */
+  public void addEdge(String from, String to) {
+<span class="fc" id="L47">    graph.putIfAbsent(from, new HashMap&lt;&gt;());</span>
+<span class="fc" id="L48">    graph.putIfAbsent(to, new HashMap&lt;&gt;());</span>
+
+<span class="fc" id="L50">    Map&lt;String, Integer&gt; edges = graph.get(from);</span>
+<span class="fc" id="L51">    edges.put(to, edges.getOrDefault(to, 0) + 1);</span>
+<span class="fc" id="L52">  }</span>
+
+  /**
+   * 获取边的权重.
+   */
+  public int getEdgeWeight(String from, String to) {
+<span class="nc" id="L58">    return graph.getOrDefault(from, new HashMap&lt;&gt;()).getOrDefault(to, 0);</span>
+  }
+
+  // 获取所有节点
+  public Set&lt;String&gt; getNodes() {
+<span class="fc" id="L63">    return graph.keySet();</span>
+  }
+
+  /**
+   * 获取节点的出边.
+   */
+  public Map&lt;String, Integer&gt; getOutgoingEdges(String node) {
+<span class="fc" id="L70">    return graph.getOrDefault(node, new HashMap&lt;&gt;());</span>
+  }
+
+  /**
+   * 获取节点的入边.
+   */
+  public Map&lt;String, Integer&gt; getIncomingEdges(String node) {
+<span class="fc" id="L77">    Map&lt;String, Integer&gt; incoming = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">    for (Map.Entry&lt;String, Map&lt;String, Integer&gt;&gt; entry : graph.entrySet()) {</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">      if (entry.getValue().containsKey(node)) {</span>
+<span class="fc" id="L80">        incoming.put(entry.getKey(), entry.getValue().get(node));</span>
+      }
+    }
+<span class="fc" id="L83">    return incoming;</span>
+  }
+
+  /**
+   * 检查节点是否存在.
+   */
+  public boolean containsNode(String node) {
+<span class="fc" id="L90">    return graph.containsKey(node);</span>
+  }
+
+  /**
+   * 计算PageRank.
+   */
+  public void calculatePageRank(double d) {
+<span class="fc" id="L97">    int n = graph.size();</span>
+    // 初始化PageRank值
+<span class="fc bfc" id="L99" title="All 2 branches covered.">    for (String node : graph.keySet()) {</span>
+<span class="fc" id="L100">      pageRank.put(node, 1.0 / n);</span>
+    }
+
+    // 迭代计算PageRank
+<span class="fc bfc" id="L104" title="All 2 branches covered.">    for (int i = 0; i &lt; 100; i++) { // 迭代100次</span>
+<span class="fc" id="L105">      Map&lt;String, Double&gt; newPageRank = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">      for (String node : graph.keySet()) {</span>
+<span class="fc" id="L107">        double sum = 0;</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        for (Map.Entry&lt;String, Integer&gt; inEdge : getIncomingEdges(node).entrySet()) {</span>
+<span class="fc" id="L109">          String from = inEdge.getKey();</span>
+<span class="fc" id="L110">          int outDegree = 0;</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">          for (Integer integer : getOutgoingEdges(from).values()) {</span>
+<span class="fc" id="L112">            int intValue = integer;</span>
+<span class="fc" id="L113">            outDegree += intValue;</span>
+          }
+<span class="fc" id="L115">          sum += pageRank.get(from) * inEdge.getValue() / outDegree;</span>
+        }
+<span class="fc" id="L117">        newPageRank.put(node, (1 - d) / n + d * sum);</span>
+      }
+<span class="fc" id="L119">      pageRank = newPageRank;</span>
+    }
+<span class="fc" id="L121">  }</span>
+
+  /**
+   * 获取节点的PageRank值.
+   */
+  public double getPageRank(String node) {
+<span class="fc" id="L127">    return pageRank.getOrDefault(node, 0.0);</span>
+  }
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

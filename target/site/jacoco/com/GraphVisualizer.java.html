@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GraphVisualizer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TextGraphVisualizer</a> &gt; <a href="index.source.html" class="el_package">com</a> &gt; <span class="el_source">GraphVisualizer.java</span></div><h1>GraphVisualizer.java</h1><pre class="source lang-java linenums">package com;
+
+
+import java.awt.Color;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import javax.swing.JFrame;
+
+/**
+ * 图可视化类.
+ */
+public class GraphVisualizer extends JFrame {
+  private DirectedGraph graph;
+  private Map&lt;String, Point2D.Double&gt; nodePositions;
+  private static final int NODE_RADIUS = 20;
+  private static final int PADDING = 50;
+  private static final int WIDTH = 1200;
+  private static final int HEIGHT = 800;
+  private static final int LEVEL_HEIGHT = 100;
+  private static final int ARROW_SIZE = 10;
+
+  /**
+   * 图可视化类.
+   */
+  @SuppressWarnings(&quot;EI_EXPOSE_REP2&quot;)
+<span class="nc" id="L37">  public GraphVisualizer(DirectedGraph graph) {</span>
+<span class="nc" id="L38">    this.graph = new DirectedGraph(graph);</span>
+<span class="nc" id="L39">    this.nodePositions = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L41">    setTitle(&quot;有向图可视化&quot;);</span>
+<span class="nc" id="L42">    setSize(WIDTH, HEIGHT);</span>
+
+<span class="nc" id="L44">    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);</span>
+
+    // 计算节点位置
+<span class="nc" id="L47">    calculateNodePositions();</span>
+<span class="nc" id="L48">  }</span>
+
+  private void calculateNodePositions() {
+    // 使用BFS计算每个节点的层级
+<span class="nc" id="L52">    Map&lt;String, Integer&gt; levels = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L53">    Queue&lt;String&gt; queue = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L54">    Set&lt;String&gt; visited = new HashSet&lt;&gt;();</span>
+
+    // 找到入度为0的节点作为根节点
+<span class="nc" id="L57">    String root = null;</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">    for (String node : graph.getNodes()) {</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">      if (graph.getIncomingEdges(node).isEmpty()) {</span>
+<span class="nc" id="L60">        root = node;</span>
+<span class="nc" id="L61">        break;</span>
+      }
+    }
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">    if (root == null) {</span>
+      // 如果没有入度为0的节点，选择第一个节点作为根
+<span class="nc" id="L67">      root = graph.getNodes().iterator().next();</span>
+    }
+
+<span class="nc" id="L70">    queue.offer(root);</span>
+<span class="nc" id="L71">    visited.add(root);</span>
+<span class="nc" id="L72">    levels.put(root, 0);</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">    while (!queue.isEmpty()) {</span>
+<span class="nc" id="L75">      String current = queue.poll();</span>
+<span class="nc" id="L76">      int currentLevel = levels.get(current);</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">      for (String neighbor : graph.getOutgoingEdges(current).keySet()) {</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (!visited.contains(neighbor)) {</span>
+<span class="nc" id="L80">          visited.add(neighbor);</span>
+<span class="nc" id="L81">          levels.put(neighbor, currentLevel + 1);</span>
+<span class="nc" id="L82">          queue.offer(neighbor);</span>
+        }
+      }
+    }
+
+    // 计算每个层级的节点数量
+<span class="nc" id="L88">    Map&lt;Integer, List&lt;String&gt;&gt; levelNodes = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">    for (Map.Entry&lt;String, Integer&gt; entry : levels.entrySet()) {</span>
+<span class="nc" id="L90">      levelNodes.computeIfAbsent(entry.getValue(), k -&gt; new ArrayList&lt;&gt;()).add(entry.getKey());</span>
+    }
+
+    // 计算节点位置
+<span class="nc bnc" id="L94" title="All 2 branches missed.">    for (Map.Entry&lt;Integer, List&lt;String&gt;&gt; entry : levelNodes.entrySet()) {</span>
+<span class="nc" id="L95">      int level = entry.getKey();</span>
+<span class="nc" id="L96">      List&lt;String&gt; nodes = entry.getValue();</span>
+<span class="nc" id="L97">      int nodeCount = nodes.size();</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">      for (int i = 0; i &lt; nodeCount; i++) {</span>
+<span class="nc" id="L100">        String node = nodes.get(i);</span>
+<span class="nc" id="L101">        double x = PADDING + (double) ((WIDTH - 2 * PADDING) * (i + 1)) / (nodeCount + 1);</span>
+<span class="nc" id="L102">        double y = PADDING + level * LEVEL_HEIGHT;</span>
+<span class="nc" id="L103">        nodePositions.put(node, new Point2D.Double(x, y));</span>
+      }
+    }
+<span class="nc" id="L106">  }</span>
+
+  private void drawArrow(Graphics2D g2d, double x1, double y1, double x2, double y2) {
+<span class="nc" id="L109">    double dx = x2 - x1;</span>
+<span class="nc" id="L110">    double dy = y2 - y1;</span>
+<span class="nc" id="L111">    double angle = Math.atan2(dy, dx);</span>
+<span class="nc" id="L112">    double length = Math.sqrt(dx * dx + dy * dy);</span>
+
+    // 计算箭头位置
+<span class="nc" id="L115">    double arrowX = x1 + (dx * (length - NODE_RADIUS)) / length;</span>
+<span class="nc" id="L116">    double arrowY = y1 + (dy * (length - NODE_RADIUS)) / length;</span>
+
+    // 绘制边
+<span class="nc" id="L119">    g2d.drawLine((int) x1, (int) y1, (int) arrowX, (int) arrowY);</span>
+
+    // 绘制箭头
+<span class="nc" id="L122">    double arrowAngle1 = angle - Math.PI / 6;</span>
+<span class="nc" id="L123">    double arrowAngle2 = angle + Math.PI / 6;</span>
+
+<span class="nc" id="L125">    int[] xPoints = new int[3];</span>
+<span class="nc" id="L126">    int[] yPoints = new int[3];</span>
+
+<span class="nc" id="L128">    xPoints[0] = (int) arrowX;</span>
+<span class="nc" id="L129">    yPoints[0] = (int) arrowY;</span>
+<span class="nc" id="L130">    xPoints[1] = (int) (arrowX - ARROW_SIZE * Math.cos(arrowAngle1));</span>
+<span class="nc" id="L131">    yPoints[1] = (int) (arrowY - ARROW_SIZE * Math.sin(arrowAngle1));</span>
+<span class="nc" id="L132">    xPoints[2] = (int) (arrowX - ARROW_SIZE * Math.cos(arrowAngle2));</span>
+<span class="nc" id="L133">    yPoints[2] = (int) (arrowY - ARROW_SIZE * Math.sin(arrowAngle2));</span>
+
+<span class="nc" id="L135">    g2d.fillPolygon(xPoints, yPoints, 3);</span>
+<span class="nc" id="L136">  }</span>
+
+  @Override
+  public void paint(Graphics g) {
+<span class="nc" id="L140">    super.paint(g);</span>
+<span class="nc" id="L141">    Graphics2D g2d = (Graphics2D) g;</span>
+<span class="nc" id="L142">    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);</span>
+
+    // 绘制边
+<span class="nc" id="L145">    g2d.setColor(Color.BLACK);</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">    for (String from : graph.getNodes()) {</span>
+<span class="nc" id="L147">      Point2D.Double fromPos = nodePositions.get(from);</span>
+<span class="nc" id="L148">      Map&lt;String, Integer&gt; edges = graph.getOutgoingEdges(from);</span>
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">      for (Map.Entry&lt;String, Integer&gt; edge : edges.entrySet()) {</span>
+<span class="nc" id="L151">        String to = edge.getKey();</span>
+<span class="nc" id="L152">        Point2D.Double toPos = nodePositions.get(to);</span>
+
+        // 绘制带箭头的边
+<span class="nc" id="L155">        drawArrow(g2d, fromPos.x, fromPos.y, toPos.x, toPos.y);</span>
+
+        // 绘制权重
+<span class="nc" id="L158">        String weight = String.valueOf(edge.getValue());</span>
+<span class="nc" id="L159">        g2d.drawString(weight,</span>
+<span class="nc" id="L160">                (int) ((fromPos.x + toPos.x) / 2),</span>
+<span class="nc" id="L161">                (int) ((fromPos.y + toPos.y) / 2));</span>
+      }
+    }
+
+    // 绘制节点
+    // git test B2
+<span class="nc bnc" id="L167" title="All 2 branches missed.">    for (String node : graph.getNodes()) {</span>
+<span class="nc" id="L168">      Point2D.Double pos = nodePositions.get(node);</span>
+
+      // 绘制节点背景
+<span class="nc" id="L171">      g2d.setColor(new Color(173, 216, 230)); // 浅蓝色</span>
+<span class="nc" id="L172">      g2d.fillOval((int) (pos.x - NODE_RADIUS),</span>
+<span class="nc" id="L173">              (int) (pos.y - NODE_RADIUS),</span>
+<span class="nc" id="L174">              NODE_RADIUS * 2,</span>
+<span class="nc" id="L175">              NODE_RADIUS * 2);</span>
+
+      // 绘制节点边框
+<span class="nc" id="L178">      g2d.setColor(Color.BLACK);</span>
+<span class="nc" id="L179">      g2d.drawOval((int) (pos.x - NODE_RADIUS),</span>
+<span class="nc" id="L180">              (int) (pos.y - NODE_RADIUS),</span>
+<span class="nc" id="L181">              NODE_RADIUS * 2,</span>
+<span class="nc" id="L182">              NODE_RADIUS * 2);</span>
+
+      // 绘制节点标签
+<span class="nc" id="L185">      g2d.setColor(Color.BLACK);</span>
+<span class="nc" id="L186">      FontMetrics fm = g2d.getFontMetrics();</span>
+<span class="nc" id="L187">      int textWidth = fm.stringWidth(node);</span>
+<span class="nc" id="L188">      g2d.drawString(node,</span>
+<span class="nc" id="L189">              (int) (pos.x - (double) textWidth / 2),</span>
+<span class="nc" id="L190">              (int) (pos.y + (double) fm.getAscent() / 2));</span>
+    }
+<span class="nc" id="L192">  }</span>
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
